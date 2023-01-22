@@ -1,16 +1,36 @@
----
-title: Options
-slug: /options
-sidebar_position: 2
----
+import requests
+import json
 
-:::info Root Endpoint For Options
-https://api.marketdata.app/v1/options
-:::
+# Define the endpoint for retrieving the current market price
+endpoint = 'https://api.marketdata.app/v1/ticker'
 
-    https://api.marketdata.app/v1/options
+# Define the parameters for the request
+params = {'symbol': 'USD/EUR'}
 
-import DocCardList from "@theme/DocCardList";
-import { useCurrentSidebarCategory } from "@docusaurus/theme-common";
+# Send the request to the endpoint
+response = requests.get(endpoint, params=params)
 
-<DocCardList items={useCurrentSidebarCategory().items} />
+# Parse the JSON response
+data = json.loads(response.text)
+
+# Extract the current market price from the response
+market_price = data['last']
+print(market_price)
+
+# Create DataFrame with the current market price
+stock_data = pd.DataFrame({'Close': [market_price]})
+
+# Calculating the 14-day RSI
+delta = stock_data['Close'].diff()
+gain = delta.where(delta > 0, 0)
+loss = -delta.where(delta < 0, 0)
+avg_gain = gain.rolling(14).mean()
+avg_loss = loss.rolling(14).mean()
+rs = avg_gain / avg_loss
+rsi = 100 - (100 / (1 + rs))
+
+# Adding the RSI to the DataFrame
+stock_data['RSI'] = rsi
+
+# Print the first row of the stock data
+print(stock_data.head(1))
